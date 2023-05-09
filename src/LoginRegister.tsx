@@ -1,4 +1,57 @@
+import { useState } from "react";
+import { axiosInstance } from "../src/functions/axiosInstance";
+import { useLocation } from "react-router";
+
 export default function LoginRegister() {
+  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const location = useLocation();
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setUserName(e.target.value);
+  }
+
+  function handleEmailChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setEmail(e.target.value);
+  }
+
+  function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setPassword(e.target.value);
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    try {
+      if (location.pathname === "/login") {
+        const reqBody = {
+          user: {
+            email: email,
+            password: password,
+          },
+        };
+        const response = await axiosInstance.post("/users/login", reqBody);
+        console.log(response);
+        window.localStorage.setItem("token", response.data.user.token);
+      } else if (location.pathname === "/register") {
+        const reqBody = {
+          user: {
+            email: email,
+            password: password,
+            username: userName,
+          },
+        };
+        const response = await axiosInstance.post("/users", reqBody);
+        console.log(response);
+        window.localStorage.setItem("token", response.data.user.token);
+      } else {
+        console.error("Route error");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <>
       <nav className="navbar navbar-light">
@@ -43,24 +96,41 @@ export default function LoginRegister() {
         <div className="container page">
           <div className="row">
             <div className="col-md-6 offset-md-3 col-xs-12">
-              <h1 className="text-xs-center">Sign up</h1>
-              <p className="text-xs-center">
-                <a href="">Have an account?</a>
-              </p>
+              <h1 className="text-xs-center">{location.pathname === "/register" ? "Sign up" : "Sign in"}</h1>
+              {location.pathname === "/register" ? (
+                <p className="text-xs-center">
+                  <a href="">Have an account?</a>
+                </p>
+              ) : null}
 
               <ul className="error-messages">
                 <li>That email is already taken</li>
               </ul>
 
-              <form>
+              <form onSubmit={handleSubmit}>
                 <fieldset className="form-group">
-                  <input className="form-control form-control-lg" type="text" placeholder="Your Name" />
+                  <input
+                    className="form-control form-control-lg"
+                    type="text"
+                    placeholder="Your Name"
+                    onChange={handleNameChange}
+                  />
                 </fieldset>
                 <fieldset className="form-group">
-                  <input className="form-control form-control-lg" type="text" placeholder="Email" />
+                  <input
+                    className="form-control form-control-lg"
+                    type="text"
+                    placeholder="Email"
+                    onChange={handleEmailChange}
+                  />
                 </fieldset>
                 <fieldset className="form-group">
-                  <input className="form-control form-control-lg" type="password" placeholder="Password" />
+                  <input
+                    className="form-control form-control-lg"
+                    type="password"
+                    placeholder="Password"
+                    onChange={handlePasswordChange}
+                  />
                 </fieldset>
                 <button className="btn btn-lg btn-primary pull-xs-right">Sign up</button>
               </form>

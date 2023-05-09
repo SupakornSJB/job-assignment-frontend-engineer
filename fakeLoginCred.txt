@@ -1,0 +1,4 @@
+| Email | Password |
+| --- | --- |
+| alice@example.com | I_<3-R0ber7 |
+| bob@example.com | 4L1ce-I5 mY_li3f |
