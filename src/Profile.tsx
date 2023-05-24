@@ -1,59 +1,107 @@
-export default function Profile() {
+import { useState, useEffect } from "react";
+import { IProfileData, IUserData } from "interface/userProfile";
+import { axiosInstance } from "utils/axiosInstance";
+import { useHistory, useParams } from "react-router-dom";
+import ArticleReview from "ArticleReview";
+import { ArticleGet } from "interface/article";
+import { useAuth } from "contexts/AuthContext";
+import { fetchFollowAuthorApi, mapAndSetFavoriteInArticle } from "utils/followFavorite";
+
+const Profile: React.FunctionComponent = () => {
+  const [userData, setUserData] = useState<IProfileData | null>(null);
+  const [articleByUser, setArticleByUser] = useState<ArticleGet[]>([]);
+  const [articleFavByUser, setArticleFavByUser] = useState<ArticleGet[]>([]);
+  const [isOnFavoriteTab, setIsOnFavoriteTab] = useState(true);
+  const { username } = useParams<{ username?: string }>();
+  const { user, isLoggedIn } = useAuth();
+  const history = useHistory();
+
+  useEffect(() => {
+    setUpUserProfile();
+  }, []);
+
+  useEffect(() => {
+    if (userData) {
+      setUpArticle();
+    }
+  }, [userData]);
+
+  async function setUpUserProfile() {
+    try {
+      const response = await axiosInstance.get(`/profiles/${username}`);
+      setUserData(response.data.profile);
+    } catch (e: unknown) {
+      console.error(e);
+      history.push("/");
+    }
+  }
+
+  async function setUpArticle() {
+    try {
+      const [articleWrittenByUserRes, articleFavoritedByUserRes] = await Promise.all([
+        axiosInstance.get(`articles`, { params: { author: userData?.username } }),
+        axiosInstance.get(`articles`, { params: { favorited: userData?.username } }),
+      ]);
+
+      setArticleByUser(articleWrittenByUserRes.data.articles);
+      setArticleFavByUser(articleFavoritedByUserRes.data.articles);
+    } catch (e: unknown) {
+      console.error(e);
+      history.push("/");
+    }
+  }
+
+  function toggleFollowState(): void {
+    setUserData(prev => {
+      if (prev) {
+        const newUserData: IProfileData = { ...prev };
+        newUserData.following = !newUserData.following;
+        return newUserData;
+      }
+      return prev;
+    });
+  }
+
+  async function handleFollowAuthor(): Promise<void> {
+    if (userData) {
+      const prevUserDataState = { ...userData };
+      toggleFollowState();
+      if (!(await fetchFollowAuthorApi(!prevUserDataState.following, userData.username))) {
+        setUserData(prevUserDataState);
+      }
+    }
+  }
+
+  function setFavoriteState(slug: string): (setTo: boolean) => void {
+    // TODO : implement this
+    // set the favorite and favCount state on the parent (this) component
+    return (setTo: boolean) => {
+      setArticleByUser((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+      setArticleFavByUser((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+    };
+  }
+
   return (
     <>
-      <nav className="navbar navbar-light">
-        <div className="container">
-          <a className="navbar-brand" href="/#">
-            conduit
-          </a>
-          <ul className="nav navbar-nav pull-xs-right">
-            <li className="nav-item">
-              {/* Add "active" class when you're on that page" */}
-              <a className="nav-link active" href="/#">
-                Home
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/editor">
-                <i className="ion-compose" />
-                &nbsp;New Article
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/settings">
-                <i className="ion-gear-a" />
-                &nbsp;Settings
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/login">
-                Sign in
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/register">
-                Sign up
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
       <div className="profile-page">
         <div className="user-info">
           <div className="container">
             <div className="row">
               <div className="col-xs-12 col-md-10 offset-md-1">
-                <img src="http://i.imgur.com/Qr71crq.jpg" className="user-img" />
-                <h4>Eric Simons</h4>
-                <p>
-                  Cofounder @GoThinkster, lived in Aol&lsquo;s HQ for a few months, kinda looks like Peeta from the
-                  Hunger Games
-                </p>
-                <button className="btn btn-sm btn-outline-secondary action-btn">
-                  <i className="ion-plus-round" />
-                  &nbsp; Follow Eric Simons
-                </button>
+                <img src={userData?.image} className="user-img" />
+                <h4>{userData?.username}</h4>
+                <p>{userData?.bio}</p>
+                {!(user?.username === userData?.username) && isLoggedIn && (
+                  <button
+                    className={`btn btn-sm ${
+                      userData?.following ? "btn-secondary" : "btn-outline-secondary"
+                    } action-btn`}
+                    onClick={handleFollowAuthor}
+                  >
+                    <i className="ion-plus-round" />
+                    &nbsp; Follow {userData?.username}
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -65,81 +113,45 @@ export default function Profile() {
               <div className="articles-toggle">
                 <ul className="nav nav-pills outline-active">
                   <li className="nav-item">
-                    <a className="nav-link active" href="">
+                    <a
+                      className={`nav-link ${isOnFavoriteTab ? "" : "active"} `}
+                      onClick={() => setIsOnFavoriteTab(false)}
+                    >
                       My Articles
                     </a>
                   </li>
                   <li className="nav-item">
-                    <a className="nav-link" href="">
+                    <a
+                      className={`nav-link ${isOnFavoriteTab ? "active" : ""}`}
+                      onClick={() => setIsOnFavoriteTab(true)}
+                    >
                       Favorited Articles
                     </a>
                   </li>
                 </ul>
               </div>
 
-              <div className="article-preview">
-                <div className="article-meta">
-                  <a href="/#/profile/ericsimmons">
-                    <img src="http://i.imgur.com/Qr71crq.jpg" />
-                  </a>
-                  <div className="info">
-                    <a href="/#/profile/ericsimmons" className="author">
-                      Eric Simons
-                    </a>
-                    <span className="date">January 20th</span>
-                  </div>
-                  <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i className="ion-heart" /> 29
-                  </button>
-                </div>
-                <a href="/#/how-to-build-webapps-that-scale" className="preview-link">
-                  <h1>How to build webapps that scale</h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                </a>
-              </div>
-
-              <div className="article-preview">
-                <div className="article-meta">
-                  <a href="/#/profile/albertpai">
-                    <img src="http://i.imgur.com/N4VcUeJ.jpg" />
-                  </a>
-                  <div className="info">
-                    <a href="/#/profile/albertpai" className="author">
-                      Albert Pai
-                    </a>
-                    <span className="date">January 20th</span>
-                  </div>
-                  <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i className="ion-heart" /> 32
-                  </button>
-                </div>
-                <a href="/#/the-song-you-wont-ever-stop-singing" className="preview-link">
-                  <h1>The song you won&lsquo;t ever stop singing. No matter how hard you try.</h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                  <ul className="tag-list">
-                    <li className="tag-default tag-pill tag-outline">Music</li>
-                    <li className="tag-default tag-pill tag-outline">Song</li>
-                  </ul>
-                </a>
-              </div>
+              {isOnFavoriteTab
+                ? articleFavByUser.map(article => (
+                    <ArticleReview
+                      article={article}
+                      key={article.slug}
+                      setFavoriteState={setFavoriteState(article.slug)}
+                    />
+                  ))
+                : articleByUser.map(article => (
+                    <ArticleReview
+                      article={article}
+                      key={article.slug}
+                      setFavoriteState={setFavoriteState(article.slug)}
+                    />
+                  ))}
             </div>
           </div>
         </div>
       </div>
-
-      <footer>
-        <div className="container">
-          <a href="/#" className="logo-font">
-            conduit
-          </a>
-          <span className="attribution">
-            An interactive learning project from <a href="https://thinkster.io">Thinkster</a>. Code &amp; design
-            licensed under MIT.
-          </span>
-        </div>
-      </footer>
     </>
   );
-}
+};
+
+export default Profile;

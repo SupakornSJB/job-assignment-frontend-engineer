@@ -1,67 +1,109 @@
+import React from "react";
+import { useHistory, useParams } from "react-router-dom";
+import { ArticleGet } from "interface/article";
+import { axiosInstance } from "utils/axiosInstance";
+import { useAuth } from "contexts/AuthContext";
+import { AxiosError } from "axios";
+import { fetchFavoriteToggleApi } from "utils/followFavorite";
+
 export default function Article() {
+  const param = useParams<{ slug?: string }>();
+  const [article, setArticle] = React.useState<ArticleGet | null>(null);
+  const history = useHistory();
+  const { logout } = useAuth();
+
+  React.useEffect(() => {
+    console.log(article);
+  }, [article]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+
+    async function fetchdata(): Promise<void> {
+      try {
+        if (!param.slug) {
+          throw new Error();
+        }
+        const response = await axiosInstance.get(`/articles/${param.slug}`);
+        if (isMounted) {
+          setArticle(response.data.article);
+        }
+      } catch (e: unknown) {
+        console.error(e);
+        history.push("/");
+      }
+    }
+
+    fetchdata();
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
+
+  function setToggleFavoriteState() {
+    // set favorite state based to the opposite of "previous" state
+    setArticle((prevState: ArticleGet | null) => {
+      if (prevState) {
+        const article: ArticleGet = {...prevState};
+        if (!article.favorited) {
+          article.favoritesCount += 1;
+        } else {
+          article.favoritesCount -= 1;
+        }
+        article.favorited = !article.favorited;
+        return article
+      }
+
+      return prevState;
+    })
+  }
+
+  async function toggleFavorite(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
+    e.preventDefault();
+    if (article) {
+      const prevArticleState = {...article}
+      setToggleFavoriteState();
+      if (!(await fetchFavoriteToggleApi(!prevArticleState.favorited, article.slug))) {
+        setArticle(prevArticleState);
+      }
+    }
+  }
+
+  function setToggleFollowState(): void {
+    console.log("h");
+  }
+
+  async function toggleFollow(e: React.MouseEvent<HTMLButtonElement>): Promise<void> {
+    console.log("a");
+  }
+
   return (
     <>
-      <nav className="navbar navbar-light">
-        <div className="container">
-          <a className="navbar-brand" href="/#">
-            conduit
-          </a>
-          <ul className="nav navbar-nav pull-xs-right">
-            <li className="nav-item">
-              {/* Add "active" class when you're on that page" */}
-              <a className="nav-link active" href="/#">
-                Home
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/editor">
-                <i className="ion-compose" />
-                &nbsp;New Article
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/settings">
-                <i className="ion-gear-a" />
-                &nbsp;Settings
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/login">
-                Sign in
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/register">
-                Sign up
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
       <div className="article-page">
         <div className="banner">
           <div className="container">
-            <h1>How to build webapps that scale</h1>
+            <h1>{article?.title}</h1>
 
             <div className="article-meta">
-              <a href="/#/profile/ericsimmons">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
+              <a href={`/#/profile/${article?.author.username}`}>
+                <img src={article?.author.image} />
               </a>
               <div className="info">
-                <a href="/#/profile/ericsimmons" className="author">
-                  Eric Simons
+                <a href={`/#/profile/${article?.author.username}`} className="author">
+                  {article?.author.username}
                 </a>
                 <span className="date">January 20th</span>
               </div>
               <button className="btn btn-sm btn-outline-secondary">
                 <i className="ion-plus-round" />
-                &nbsp; Follow Eric Simons <span className="counter">(10)</span>
+                &nbsp; Follow {article?.author.username} <span className="counter">(10)</span>
               </button>
               &nbsp;&nbsp;
-              <button className="btn btn-sm btn-outline-primary">
+              <button className="btn btn-sm btn-outline-primary" onClick={toggleFavorite}>
                 <i className="ion-heart" />
-                &nbsp; Favorite Post <span className="counter">(29)</span>
+                &nbsp; Favorite Post <span className="counter">{article?.favoritesCount}</span>
               </button>
             </div>
           </div>
@@ -70,9 +112,9 @@ export default function Article() {
         <div className="container page">
           <div className="row article-content">
             <div className="col-md-12">
-              <p>Web development technologies have evolved at an incredible clip over the past few years.</p>
-              <h2 id="introducing-ionic">Introducing RealWorld.</h2>
-              <p>It&lsquo;s a great solution for learning how other frameworks work.</p>
+              <p>{article?.description}</p>
+              <h2 id="introducing-ionic">{article?.title}</h2>
+              <p>{article?.body}</p>
             </div>
           </div>
 
@@ -80,23 +122,23 @@ export default function Article() {
 
           <div className="article-actions">
             <div className="article-meta">
-              <a href="/#/profile/ericsimmons">
-                <img src="http://i.imgur.com/Qr71crq.jpg" />
+              <a href={`/#/profile/${article?.author.username}`}>
+                <img src={article?.author.image} />
               </a>
               <div className="info">
-                <a href="/#/profile/ericsimmons" className="author">
-                  Eric Simons
+                <a href={`/#/profile/${article?.author.username}`} className="author">
+                  {article?.author.username}
                 </a>
-                <span className="date">January 20th</span>
+                <span className="date">{article?.updatedAt}</span>
               </div>
               <button className="btn btn-sm btn-outline-secondary">
                 <i className="ion-plus-round" />
-                &nbsp; Follow Eric Simons
+                &nbsp; Follow {article?.author.username}
               </button>
               &nbsp;
-              <button className="btn btn-sm btn-outline-primary">
+              <button className="btn btn-sm btn-outline-primary" onClick={toggleFavorite}>
                 <i className="ion-heart" />
-                &nbsp; Favorite Post <span className="counter">(29)</span>
+                &nbsp; Favorite Post <span className="counter">{article?.favoritesCount}</span>
               </button>
             </div>
           </div>
@@ -152,18 +194,6 @@ export default function Article() {
           </div>
         </div>
       </div>
-
-      <footer>
-        <div className="container">
-          <a href="/#" className="logo-font">
-            conduit
-          </a>
-          <span className="attribution">
-            An interactive learning project from <a href="https://thinkster.io">Thinkster</a>. Code &amp; design
-            licensed under MIT.
-          </span>
-        </div>
-      </footer>
     </>
   );
 }

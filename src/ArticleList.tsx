@@ -1,44 +1,54 @@
-export default function ArticleList() {
+import { AxiosResponse } from "axios";
+import { useAuth } from "contexts/AuthContext";
+import { axiosInstance } from "utils/axiosInstance";
+import React from "react";
+import { ArticleGet } from "interface/article";
+import ArticleReview from "ArticleReview";
+import { mapAndSetFavoriteInArticle } from "utils/followFavorite"
+
+const ArticleList: React.FunctionComponent = () => {
+  const [globalArticleList, setGlobalArticleList] = React.useState<ArticleGet[]>([]);
+  const [userArticleList, setUserArticleList] = React.useState<ArticleGet[]>([]);
+  const [isGlobalTab, setIsGlobalTab] = React.useState(true);
+  const { isLoggedIn } = useAuth();
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        let [globalArticle, userArticle]: [AxiosResponse | null, AxiosResponse | null] = [null, null];
+        [globalArticle, userArticle] = await Promise.all([
+          axiosInstance.get("/articles", { signal: controller.signal }),
+          isLoggedIn ? axiosInstance.get("/articles/feed", { signal: controller.signal }) : null,
+        ]);
+        if (isMounted) {
+          setGlobalArticleList(globalArticle.data.articles);
+          setUserArticleList(userArticle ? userArticle.data.articles : []);
+        }
+      } catch (e: unknown) {
+        console.error(e);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
+  }, []);
+
+  function setFavoriteState(slug: string): (setTo: boolean) => void {
+    // TODO : implement this
+    // set the favorite and favCount state on the parent (this) component
+    
+    return (setTo: boolean) => {
+      setGlobalArticleList((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+      setUserArticleList((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+    };
+  }
+
   return (
     <>
-      <nav className="navbar navbar-light">
-        <div className="container">
-          <a className="navbar-brand" href="/#">
-            conduit
-          </a>
-          <ul className="nav navbar-nav pull-xs-right">
-            <li className="nav-item">
-              {/* Add "active" class when you're on that page" */}
-              <a className="nav-link active" href="/#">
-                Home
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/editor">
-                <i className="ion-compose" />
-                &nbsp;New Article
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/settings">
-                <i className="ion-gear-a" />
-                &nbsp;Settings
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/login">
-                Sign in
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/register">
-                Sign up
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
       <div className="home-page">
         <div className="banner">
           <div className="container">
@@ -52,62 +62,43 @@ export default function ArticleList() {
             <div className="col-md-9">
               <div className="feed-toggle">
                 <ul className="nav nav-pills outline-active">
+                  {isLoggedIn && (
+                    <li className="nav-item">
+                      <a
+                        className={`nav-link ${isGlobalTab ? "" : "active"}`}
+                        onClick={() => setIsGlobalTab(false)}
+                        href="#"
+                      >
+                        Your Feed
+                      </a>
+                    </li>
+                  )}
                   <li className="nav-item">
-                    <a className="nav-link disabled" href="">
-                      Your Feed
-                    </a>
-                  </li>
-                  <li className="nav-item">
-                    <a className="nav-link active" href="">
+                    <a
+                      className={`nav-link ${isGlobalTab ? "active" : ""}`}
+                      onClick={() => setIsGlobalTab(true)}
+                      href="#"
+                    >
                       Global Feed
                     </a>
                   </li>
                 </ul>
               </div>
-
-              <div className="article-preview">
-                <div className="article-meta">
-                  <a href="/#/profile/ericsimmons">
-                    <img src="http://i.imgur.com/Qr71crq.jpg" />
-                  </a>
-                  <div className="info">
-                    <a href="/#/profile/ericsimmons" className="author">
-                      Eric Simons
-                    </a>
-                    <span className="date">January 20th</span>
-                  </div>
-                  <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i className="ion-heart" /> 29
-                  </button>
-                </div>
-                <a href="/#/how-to-build-webapps-that-scale" className="preview-link">
-                  <h1>How to build webapps that scale</h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                </a>
-              </div>
-
-              <div className="article-preview">
-                <div className="article-meta">
-                  <a href="/#/profile/albertpai">
-                    <img src="http://i.imgur.com/N4VcUeJ.jpg" />
-                  </a>
-                  <div className="info">
-                    <a href="/#/profile/albertpai" className="author">
-                      Albert Pai
-                    </a>
-                    <span className="date">January 20th</span>
-                  </div>
-                  <button className="btn btn-outline-primary btn-sm pull-xs-right">
-                    <i className="ion-heart" /> 32
-                  </button>
-                </div>
-                <a href="/#/the-song-you-wont-ever-stop-singing" className="preview-link">
-                  <h1>The song you won&lsquo;t ever stop singing. No matter how hard you try.</h1>
-                  <p>This is the description for the post.</p>
-                  <span>Read more...</span>
-                </a>
-              </div>
+              {isGlobalTab
+                ? globalArticleList?.map(article => (
+                    <ArticleReview
+                      article={article}
+                      key={article.slug}
+                      setFavoriteState={setFavoriteState(article.slug)}
+                    />
+                  ))
+                : userArticleList?.map(article => (
+                    <ArticleReview
+                      article={article}
+                      key={article.slug}
+                      setFavoriteState={setFavoriteState(article.slug)}
+                    />
+                  ))}
             </div>
 
             <div className="col-md-3">
@@ -145,18 +136,8 @@ export default function ArticleList() {
           </div>
         </div>
       </div>
-
-      <footer>
-        <div className="container">
-          <a href="/#" className="logo-font">
-            conduit
-          </a>
-          <span className="attribution">
-            An interactive learning project from <a href="https://thinkster.io">Thinkster</a>. Code &amp; design
-            licensed under MIT.
-          </span>
-        </div>
-      </footer>
     </>
   );
-}
+};
+
+export default ArticleList;

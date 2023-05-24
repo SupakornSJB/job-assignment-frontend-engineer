@@ -1,82 +1,60 @@
 import { useState } from "react";
-import { useHistory } from "react-router-dom";
-import { axiosInstance } from "functions/axiosInstance";
-
-const MAX_TITLE_LENGTH = 9999;
-const MAX_ABOUT_LENGTH = 9999;
-const MAX_ARTICLE_LENGTH = 9999;
-const MAX_TAGS_LENGTH = 9999;
+import { useHistory, useParams } from "react-router-dom";
+import { axiosInstance } from "utils/axiosInstance";
+import { MAX_ABOUT_LENGTH, MAX_ARTICLE_LENGTH, MAX_TAGS_LENGTH, MAX_TITLE_LENGTH } from "constant/constant";
+import { ArticleCreateUpdate } from "interface/article";
 
 export default function Editor() {
   const [title, setTitle] = useState("");
-  const [about, setAbout] = useState("");
-  const [articleText, setArticle] = useState("");
-  const [tags, setTags] = useState("");
+  const [description, setDescription] = useState("");
+  const [body, setBody] = useState("");
+  const [tagList, setTagList] = useState("");
   const history = useHistory();
+  const { slug } = useParams<{ slug?: string }>();
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setTitle(e.target.value.slice(0, MAX_TITLE_LENGTH));
-  } 
-
-  function handleAboutChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setAbout(e.target.value.slice(0, MAX_ABOUT_LENGTH));
   }
 
-  function handleArticleChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
-    setArticle(e.target.value.slice(0, MAX_ARTICLE_LENGTH));
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setDescription(e.target.value.slice(0, MAX_ABOUT_LENGTH));
   }
 
-  function handleTagsChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setTags(e.target.value.slice(0, MAX_TAGS_LENGTH));
+  function handleBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+    setBody(e.target.value.slice(0, MAX_ARTICLE_LENGTH));
   }
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
+  function handleTagListChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setTagList(e.target.value.slice(0, MAX_TAGS_LENGTH));
+  }
+
+  function seperateTags(): string[] {
+    return tagList.split(",")
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
-    console.log("submitting");
+    const reqBody: {article: ArticleCreateUpdate} = {
+      article: {
+        title,
+        description,
+        body,
+        tagList: seperateTags()
+      }
+    }
 
+    console.log(reqBody);
+    try {
+      const response = await axiosInstance.post("/articles", reqBody);
+      console.log(response.data);
+    } catch (e: unknown) {
+      console.error(e);
+    }
     history.push("/");
   }
 
   return (
     <>
-      <nav className="navbar navbar-light">
-        <div className="container">
-          <a className="navbar-brand" href="/#">
-            conduit
-          </a>
-          <ul className="nav navbar-nav pull-xs-right">
-            <li className="nav-item">
-              {/* Add "active" class when you're on that page" */}
-              <a className="nav-link active" href="/#">
-                Home
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/editor">
-                <i className="ion-compose" />
-                &nbsp;New Article
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/settings">
-                <i className="ion-gear-a" />
-                &nbsp;Settings
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/login">
-                Sign in
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="/#/register">
-                Sign up
-              </a>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
       <div className="editor-page">
         <div className="container page">
           <div className="row">
@@ -84,16 +62,31 @@ export default function Editor() {
               <form onSubmit={handleSubmit}>
                 <fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control form-control-lg" placeholder="Article Title" onChange={handleTitleChange}/>
+                    <input
+                      type="text"
+                      className="form-control form-control-lg"
+                      placeholder="Article Title"
+                      onChange={handleTitleChange}
+                    />
                   </fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control" placeholder="What's this article about?" onChange={handleAboutChange}/>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="What's this article about?"
+                      onChange={handleDescriptionChange}
+                    />
                   </fieldset>
                   <fieldset className="form-group">
-                    <textarea className="form-control" rows={8} placeholder="Write your article (in markdown)" onChange={handleArticleChange}/>
+                    <textarea
+                      className="form-control"
+                      rows={8}
+                      placeholder="Write your article (in markdown)"
+                      onChange={handleBodyChange}
+                    />
                   </fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control" placeholder="Enter tags" onChange={handleTagsChange}/>
+                    <input type="text" className="form-control" placeholder="Enter tags" onChange={handleTagListChange} />
                     <div className="tag-list" />
                   </fieldset>
                   <button className="btn btn-lg pull-xs-right btn-primary" type="submit">
@@ -105,18 +98,6 @@ export default function Editor() {
           </div>
         </div>
       </div>
-
-      <footer>
-        <div className="container">
-          <a href="/#" className="logo-font">
-            conduit
-          </a>
-          <span className="attribution">
-            An interactive learning project from <a href="https://thinkster.io">Thinkster</a>. Code &amp; design
-            licensed under MIT.
-          </span>
-        </div>
-      </footer>
     </>
   );
 }
