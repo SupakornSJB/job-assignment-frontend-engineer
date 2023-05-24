@@ -1,4 +1,42 @@
+import { useState } from "react";
+import { useHistory } from "react-router-dom";
+import { axiosInstance } from "functions/axiosInstance";
+
+const MAX_TITLE_LENGTH = 9999;
+const MAX_ABOUT_LENGTH = 9999;
+const MAX_ARTICLE_LENGTH = 9999;
+const MAX_TAGS_LENGTH = 9999;
+
 export default function Editor() {
+  const [title, setTitle] = useState("");
+  const [about, setAbout] = useState("");
+  const [articleText, setArticle] = useState("");
+  const [tags, setTags] = useState("");
+  const history = useHistory();
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setTitle(e.target.value.slice(0, MAX_TITLE_LENGTH));
+  } 
+
+  function handleAboutChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setAbout(e.target.value.slice(0, MAX_ABOUT_LENGTH));
+  }
+
+  function handleArticleChange(e: React.ChangeEvent<HTMLTextAreaElement>): void {
+    setArticle(e.target.value.slice(0, MAX_ARTICLE_LENGTH));
+  }
+
+  function handleTagsChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setTags(e.target.value.slice(0, MAX_TAGS_LENGTH));
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>): void {
+    e.preventDefault();
+    console.log("submitting");
+
+    history.push("/");
+  }
+
   return (
     <>
       <nav className="navbar navbar-light">
@@ -43,22 +81,22 @@ export default function Editor() {
         <div className="container page">
           <div className="row">
             <div className="col-md-10 offset-md-1 col-xs-12">
-              <form>
+              <form onSubmit={handleSubmit}>
                 <fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control form-control-lg" placeholder="Article Title" />
+                    <input type="text" className="form-control form-control-lg" placeholder="Article Title" onChange={handleTitleChange}/>
                   </fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control" placeholder="What's this article about?" />
+                    <input type="text" className="form-control" placeholder="What's this article about?" onChange={handleAboutChange}/>
                   </fieldset>
                   <fieldset className="form-group">
-                    <textarea className="form-control" rows={8} placeholder="Write your article (in markdown)" />
+                    <textarea className="form-control" rows={8} placeholder="Write your article (in markdown)" onChange={handleArticleChange}/>
                   </fieldset>
                   <fieldset className="form-group">
-                    <input type="text" className="form-control" placeholder="Enter tags" />
+                    <input type="text" className="form-control" placeholder="Enter tags" onChange={handleTagsChange}/>
                     <div className="tag-list" />
                   </fieldset>
-                  <button className="btn btn-lg pull-xs-right btn-primary" type="button">
+                  <button className="btn btn-lg pull-xs-right btn-primary" type="submit">
                     Publish Article
                   </button>
                 </fieldset>

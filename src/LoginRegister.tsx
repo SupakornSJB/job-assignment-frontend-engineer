@@ -22,31 +22,46 @@ export default function LoginRegister() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    type reqBodyType = {
+      user: {
+        email: string,
+        password: string
+        username?: string
+      }
+    }
+
+    let reqRoute: string;
+    let reqBody: reqBodyType;
+
     try {
       if (location.pathname === "/login") {
-        const reqBody = {
+        reqRoute = "/users/login";
+        reqBody = {
           user: {
             email: email,
             password: password,
           },
         };
-        const response = await axiosInstance.post("/users/login", reqBody);
-        console.log(response);
-        window.localStorage.setItem("token", response.data.user.token);
+        
       } else if (location.pathname === "/register") {
-        const reqBody = {
+        reqRoute = "/users";
+        reqBody = {
           user: {
             email: email,
             password: password,
             username: userName,
           },
         };
-        const response = await axiosInstance.post("/users", reqBody);
-        console.log(response);
-        window.localStorage.setItem("token", response.data.user.token);
       } else {
         console.error("Route error");
+        return;
       }
+
+      const response = await axiosInstance.post("/users/login", reqBody);
+      window.localStorage.setItem("token", response.data.user.token);
+      console.log("login response: ", response);
+
     } catch (e) {
       console.error(e);
     }
@@ -108,14 +123,17 @@ export default function LoginRegister() {
               </ul>
 
               <form onSubmit={handleSubmit}>
-                <fieldset className="form-group">
-                  <input
-                    className="form-control form-control-lg"
-                    type="text"
-                    placeholder="Your Name"
-                    onChange={handleNameChange}
-                  />
-                </fieldset>
+                {location.pathname === "/register" ? (
+                  <fieldset className="form-group">
+                    <input
+                      className="form-control form-control-lg"
+                      type="text"
+                      placeholder="Your Name"
+                      onChange={handleNameChange}
+                    />
+                  </fieldset>
+                ) : null}
+
                 <fieldset className="form-group">
                   <input
                     className="form-control form-control-lg"
@@ -132,7 +150,7 @@ export default function LoginRegister() {
                     onChange={handlePasswordChange}
                   />
                 </fieldset>
-                <button className="btn btn-lg btn-primary pull-xs-right">Sign up</button>
+                <button className="btn btn-lg btn-primary pull-xs-right">{location.pathname === "/register" ? "Sign Up" : "Sign In"}</button>
               </form>
             </div>
           </div>
