@@ -30,7 +30,7 @@ export async function fetchFollowAuthorApi(follow: boolean, username: string): P
       // console.log(`follow: ${follow}, api: DELETE`);
       await axiosInstance.delete(`profiles/${username}/follow`);
     }
-  } catch (e: unknown) {
+  } catch (e) {
     console.error(e);
     return false;
   }

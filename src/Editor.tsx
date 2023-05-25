@@ -47,7 +47,7 @@ export default function Editor() {
             setBody(response.data.article.body);
             setAuthor(response.data.article.author);
           }
-        } catch (e: unknown) {
+        } catch (e) {
           detect401(e);
           history.push("/");
           console.error(e);
@@ -118,7 +118,7 @@ export default function Editor() {
         response = await axiosInstance.post("/articles", reqBody);
       }
       history.push(`/${response?.data.article.slug}`);
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       if (e instanceof AxiosError && e.response?.status === 409) {
         setError(true);

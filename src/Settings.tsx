@@ -76,7 +76,7 @@ export default function Settings() {
       });
 
       setUpdateSuccess(true);
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       console.error(e);
       setUpdateFail(true);

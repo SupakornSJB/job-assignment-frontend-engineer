@@ -26,7 +26,7 @@ const ArticleList: React.FunctionComponent = () => {
           setGlobalArticleList(globalArticle.data.articles);
           setUserArticleList(userArticle ? userArticle.data.articles : []);
         }
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
       }

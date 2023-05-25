@@ -32,7 +32,7 @@ const Profile: React.FunctionComponent = () => {
     try {
       const response = await axiosInstance.get(`/profiles/${username}`);
       setUserData(response.data.profile);
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       console.error(e);
       history.push("/");
@@ -48,7 +48,7 @@ const Profile: React.FunctionComponent = () => {
 
       setArticleByUser(articleWrittenByUserRes.data.articles);
       setArticleFavByUser(articleFavoritedByUserRes.data.articles);
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       console.error(e);
       history.push("/");
@@ -73,7 +73,7 @@ const Profile: React.FunctionComponent = () => {
 
       try {
         await fetchFollowAuthorApi(!prevUserDataState.following, userData.username)
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
         setUserData(prevUserDataState);

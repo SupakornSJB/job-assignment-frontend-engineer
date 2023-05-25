@@ -11,12 +11,16 @@ interface AuthContextInterface {
   login: (loginData: ILoginData) => Promise<IAuthResponse>;
   logout: () => Promise<IAuthResponse>;
   register: (registerData: IRegisterData) => Promise<IAuthResponse>;
-  detect401: (e:unknown) => Promise<void>;
+  detect401: (e: unknown) => Promise<void>;
 }
 
-export const AuthContext = React.createContext<AuthContextInterface>({} as AuthContextInterface);
+export const AuthContext = React.createContext<AuthContextInterface | undefined>(undefined);
 export const useAuth = (): AuthContextInterface => {
-  return useContext(AuthContext);
+  const tempHookHolder = useContext(AuthContext);
+  if (!tempHookHolder) {
+    throw new Error("AuthContext.Provider is not properly set up");
+  }
+  return tempHookHolder;
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }): JSX.Element {
@@ -33,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
         return {
             userData: response.data.user
         }
-    } catch (e: unknown) {
+    } catch (e) {
         setIsLoggedIn(false);
         setUser(null);
         return {

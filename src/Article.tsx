@@ -30,7 +30,7 @@ export default function Article() {
         if (isMounted) {
           setArticle(response.data.article);
         }
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
         history.push("/");
@@ -57,7 +57,7 @@ export default function Article() {
 
       try {
         await fetchFavoriteToggleApi(!prevArticleState.favorited, article.slug);
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
         setArticle(prevArticleState);
@@ -86,7 +86,7 @@ export default function Article() {
 
       try {
         await fetchFollowAuthorApi(!prevArticleState.author.following, prevArticleState.author.username);
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
         setArticle(prevArticleState);

@@ -17,7 +17,7 @@ const ArticleReview: React.FunctionComponent<{ article: ArticleType; setFavorite
 
     try {
       await fetchFavoriteToggleApi(!prevFavoriteState, article.slug)
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       console.error(e);
       setFavoriteState(prevFavoriteState);

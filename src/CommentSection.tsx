@@ -16,7 +16,7 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
       try {
         const response = await axiosInstance.get(`/articles/${slug}/comments`);
         setCommentList(response.data.comments.reverse());
-      } catch (e: unknown) {
+      } catch (e) {
         detect401(e);
         console.error(e);
       }
@@ -31,7 +31,7 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
     try {
         await axiosInstance.delete(`articles/${slug}/comments/${id}`);
         setCommentList(commentList.filter((comment) => comment.id != id));
-    } catch (e: unknown) {
+    } catch (e) {
         detect401(e);
         console.error(e);
     }
@@ -44,7 +44,7 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
       const response = await axiosInstance.post(`articles/${slug}/comments`, { comment: { body: commentTextbox } });
       setCommentList([response.data.comment, ...commentList]);
       setCommentTextbox("");
-    } catch (e: unknown) {
+    } catch (e) {
       detect401(e);
       console.error(e);
     }
