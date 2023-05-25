@@ -2,13 +2,13 @@
 
 ### Running the application
 There are 2 ways to run the application
-* Using Docker__
+* Using Docker -- 
 Assuming docker is installed, run the following command in cmd while at the base of the application folder
 ```
 docker build -t job-assignment-frontend-engineer .
 docker run --rm -p 8080:80 job-assignment-frontend-engineer
 ```
-* Using npm command__
+* Using npm command -- 
 Assuming npm is installed, run the following command in cmd while at the base of the application folder
 ```
 npm install
