@@ -83,12 +83,12 @@ const Profile: React.FunctionComponent = () => {
 
   function setFavoriteState(slug: string): (setTo: boolean) => void {
     return (setTo: boolean) => {
-      setArticleByUser(prevArticleList => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
-      setArticleFavByUser(prevArticleList => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
-      
-      // if (isLoggedIn && userData?.username === user?.username) {
-
-      // }
+      setArticleByUser(prevArticleList => {
+        return mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug)
+      });
+      setArticleFavByUser(prevArticleList => {
+        return mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug)
+      });
     };
   }
 

@@ -15,7 +15,7 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
     (async () => {
       try {
         const response = await axiosInstance.get(`/articles/${slug}/comments`);
-        setCommentList(response.data.comments);
+        setCommentList(response.data.comments.reverse());
       } catch (e: unknown) {
         detect401(e);
         console.error(e);
@@ -29,8 +29,7 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
 
   async function handleCommentDelete(e: React.MouseEvent<HTMLElement>, id: number): Promise<void> {
     try {
-        const response = await axiosInstance.delete(`articles/${slug}/comments/${id}`);
-        console.log(response);
+        await axiosInstance.delete(`articles/${slug}/comments/${id}`);
         setCommentList(commentList.filter((comment) => comment.id != id));
     } catch (e: unknown) {
         detect401(e);
@@ -43,7 +42,8 @@ const CommentSection: React.FunctionComponent<{ slug: string }> = ({ slug }) => 
     if (commentTextbox.length < MIN_COMMENT_LENGTH) return;
     try {
       const response = await axiosInstance.post(`articles/${slug}/comments`, { comment: { body: commentTextbox } });
-      setCommentList([...commentList, response.data.comment]);
+      setCommentList([response.data.comment, ...commentList]);
+      setCommentTextbox("");
     } catch (e: unknown) {
       detect401(e);
       console.error(e);

@@ -50,7 +50,6 @@ export default function LoginRegister() {
     }
 
     setEmailTaken(false);
-    console.log(authResponse);
     if (authResponse.fullResponse instanceof AxiosError && authResponse.fullResponse.response?.status) {
       switch (authResponse.fullResponse.response?.status) {
         case 409:
@@ -59,8 +58,6 @@ export default function LoginRegister() {
       }
       return;
     }
-
-    // history.push(authResponse.userData?.username ? `/profile/${authResponse.userData.username}` : "/");
   }
 
   return (

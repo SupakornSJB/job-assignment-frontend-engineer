@@ -12,7 +12,7 @@ import { useAuth } from "contexts/AuthContext";
 import ProtectedRoute from "ProtectedRoute";
 
 const Layout: React.FunctionComponent = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   return (
     <>
@@ -30,6 +30,12 @@ const Layout: React.FunctionComponent = () => {
             </li>
             {isLoggedIn ? (
               <>
+                <li className="nav-item">
+                  <a className="nav-link" href={`/#/profile/${user?.username}`}>
+                    <i className="ion-android-contact" />
+                    &nbsp;My profile
+                  </a>
+                </li>
                 <li className="nav-item">
                   <a className="nav-link" href="/#/editor">
                     <i className="ion-compose" />
@@ -94,23 +100,11 @@ const Layout: React.FunctionComponent = () => {
           <Route path="/editor/:slug" exact component={Editor} />
           <Route path="/settings" exact component={Settings} /> */}
         {/* nonprotected */}
-        <ProtectedRoute
-          protectOnAuth={false}
-          isAuthenticated={isLoggedIn}
-          authenticationPath=""
-          path="/login"
-          exact
-        >
-          <LoginRegister/>
+        <ProtectedRoute protectOnAuth={false} isAuthenticated={isLoggedIn} authenticationPath="" path="/login" exact>
+          <LoginRegister />
         </ProtectedRoute>
-        <ProtectedRoute
-          protectOnAuth={false}
-          isAuthenticated={isLoggedIn}
-          authenticationPath=""
-          path="/register"
-          exact
-        >
-          <LoginRegister/>
+        <ProtectedRoute protectOnAuth={false} isAuthenticated={isLoggedIn} authenticationPath="" path="/register" exact>
+          <LoginRegister />
         </ProtectedRoute>
         {/* <Route path="/login" exact component={LoginRegister} />
         <Route path="/register" exact component={LoginRegister} /> */}
