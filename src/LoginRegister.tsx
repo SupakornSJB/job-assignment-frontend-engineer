@@ -45,6 +45,10 @@ export default function LoginRegister() {
       return;
     }
 
+    if (authResponse.userData) {
+      return;
+    }
+
     setEmailTaken(false);
     console.log(authResponse);
     if (authResponse.fullResponse instanceof AxiosError && authResponse.fullResponse.response?.status) {
@@ -56,7 +60,7 @@ export default function LoginRegister() {
       return;
     }
 
-    history.push(authResponse.userData?.username ? `/profile/${authResponse.userData.username}` : "/");
+    // history.push(authResponse.userData?.username ? `/profile/${authResponse.userData.username}` : "/");
   }
 
   return (

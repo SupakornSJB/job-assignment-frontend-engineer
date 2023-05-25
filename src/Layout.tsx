@@ -107,28 +107,19 @@ const Layout: React.FunctionComponent = () => {
           protectOnAuth={false}
           isAuthenticated={isLoggedIn}
           authenticationPath=""
-          path="/logout"
-          exact
-        >
-          <Logout/>
-        </ProtectedRoute>
-        <ProtectedRoute
-          protectOnAuth={false}
-          isAuthenticated={isLoggedIn}
-          authenticationPath=""
           path="/register"
           exact
         >
           <LoginRegister/>
         </ProtectedRoute>
         {/* <Route path="/login" exact component={LoginRegister} />
-        <Route path="/logout" exact component={Logout} />
         <Route path="/register" exact component={LoginRegister} /> */}
         {/* normal */}
-        <Route path="/:slug" exact component={Article} />
-        <Route path="/" exact component={ArticleList} />
         <Route path="/profile/:username" exact component={Profile} />
         <Route path="/profile/:username/favorites" exact component={Profile} />
+        <Route path="/logout" exact component={Logout} />
+        <Route path="/:slug" exact component={Article} />
+        <Route path="/" exact component={ArticleList} />
       </Switch>
 
       <footer>
