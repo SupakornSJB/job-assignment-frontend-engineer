@@ -1,24 +1,26 @@
 import { useState, useEffect } from "react";
-import { IProfileData, IUserData } from "interface/userProfile";
+import { IProfileData } from "interface/userProfile";
 import { axiosInstance } from "utils/axiosInstance";
-import { useHistory, useParams } from "react-router-dom";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 import ArticleReview from "ArticleReview";
-import { ArticleGet } from "interface/article";
+import { ArticleType } from "interface/article";
 import { useAuth } from "contexts/AuthContext";
-import { fetchFollowAuthorApi, mapAndSetFavoriteInArticle } from "utils/followFavorite";
+import { fetchFollowAuthorApi, mapAndChangeFavoriteInArticle } from "utils/followFavorite";
+import profilePicPlaceholder from "./placeholder_profilepic.jpg"
 
 const Profile: React.FunctionComponent = () => {
   const [userData, setUserData] = useState<IProfileData | null>(null);
-  const [articleByUser, setArticleByUser] = useState<ArticleGet[]>([]);
-  const [articleFavByUser, setArticleFavByUser] = useState<ArticleGet[]>([]);
+  const [articleByUser, setArticleByUser] = useState<ArticleType[]>([]);
+  const [articleFavByUser, setArticleFavByUser] = useState<ArticleType[]>([]);
   const [isOnFavoriteTab, setIsOnFavoriteTab] = useState(true);
   const { username } = useParams<{ username?: string }>();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, detect401 } = useAuth();
   const history = useHistory();
+  const location = useLocation();
 
   useEffect(() => {
     setUpUserProfile();
-  }, []);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (userData) {
@@ -31,6 +33,7 @@ const Profile: React.FunctionComponent = () => {
       const response = await axiosInstance.get(`/profiles/${username}`);
       setUserData(response.data.profile);
     } catch (e: unknown) {
+      detect401(e);
       console.error(e);
       history.push("/");
     }
@@ -46,6 +49,7 @@ const Profile: React.FunctionComponent = () => {
       setArticleByUser(articleWrittenByUserRes.data.articles);
       setArticleFavByUser(articleFavoritedByUserRes.data.articles);
     } catch (e: unknown) {
+      detect401(e);
       console.error(e);
       history.push("/");
     }
@@ -66,18 +70,25 @@ const Profile: React.FunctionComponent = () => {
     if (userData) {
       const prevUserDataState = { ...userData };
       toggleFollowState();
-      if (!(await fetchFollowAuthorApi(!prevUserDataState.following, userData.username))) {
+
+      try {
+        await fetchFollowAuthorApi(!prevUserDataState.following, userData.username)
+      } catch (e: unknown) {
+        detect401(e);
+        console.error(e);
         setUserData(prevUserDataState);
       }
     }
   }
 
   function setFavoriteState(slug: string): (setTo: boolean) => void {
-    // TODO : implement this
-    // set the favorite and favCount state on the parent (this) component
     return (setTo: boolean) => {
-      setArticleByUser((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
-      setArticleFavByUser((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+      setArticleByUser(prevArticleList => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
+      setArticleFavByUser(prevArticleList => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
+      
+      // if (isLoggedIn && userData?.username === user?.username) {
+
+      // }
     };
   }
 
@@ -88,20 +99,18 @@ const Profile: React.FunctionComponent = () => {
           <div className="container">
             <div className="row">
               <div className="col-xs-12 col-md-10 offset-md-1">
-                <img src={userData?.image} className="user-img" />
+                <img src={userData?.image === "" ? profilePicPlaceholder : userData?.image} className="user-img" />
                 <h4>{userData?.username}</h4>
                 <p>{userData?.bio}</p>
-                {!(user?.username === userData?.username) && isLoggedIn && (
-                  <button
-                    className={`btn btn-sm ${
-                      userData?.following ? "btn-secondary" : "btn-outline-secondary"
-                    } action-btn`}
-                    onClick={handleFollowAuthor}
-                  >
-                    <i className="ion-plus-round" />
-                    &nbsp; Follow {userData?.username}
-                  </button>
-                )}
+
+                <button
+                  className={`btn btn-sm ${userData?.following ? "btn-secondary" : "btn-outline-secondary"} action-btn`}
+                  onClick={handleFollowAuthor}
+                  disabled={!isLoggedIn}
+                >
+                  <i className="ion-plus-round" />
+                  &nbsp; Follow {userData?.username}
+                </button>
               </div>
             </div>
           </div>
@@ -113,20 +122,22 @@ const Profile: React.FunctionComponent = () => {
               <div className="articles-toggle">
                 <ul className="nav nav-pills outline-active">
                   <li className="nav-item">
-                    <a
+                    <button
                       className={`nav-link ${isOnFavoriteTab ? "" : "active"} `}
                       onClick={() => setIsOnFavoriteTab(false)}
+                      style={{outline: "none"}}
                     >
                       My Articles
-                    </a>
+                    </button>
                   </li>
                   <li className="nav-item">
-                    <a
+                    <button
                       className={`nav-link ${isOnFavoriteTab ? "active" : ""}`}
                       onClick={() => setIsOnFavoriteTab(true)}
+                      style={{outline: "none"}}
                     >
                       Favorited Articles
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </div>

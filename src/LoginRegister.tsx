@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { axiosInstance } from "utils/axiosInstance";
 import { useLocation, useHistory } from "react-router";
 import { AxiosError } from "axios";
 import { useAuth } from "contexts/AuthContext";
@@ -47,15 +46,15 @@ export default function LoginRegister() {
     }
 
     setEmailTaken(false);
-
-    if (authResponse.fullResponse instanceof AxiosError && authResponse.fullResponse) {
-      switch (authResponse.fullResponse.status) {
+    console.log(authResponse);
+    if (authResponse.fullResponse instanceof AxiosError && authResponse.fullResponse.response?.status) {
+      switch (authResponse.fullResponse.response?.status) {
         case 409:
           setEmailTaken(true);
           break;
       }
       return;
-    } 
+    }
 
     history.push(authResponse.userData?.username ? `/profile/${authResponse.userData.username}` : "/");
   }
@@ -75,7 +74,7 @@ export default function LoginRegister() {
 
               {emailTaken ? (
                 <ul className="error-messages">
-                  <li>That email is already taken</li>
+                  <li>Email or username is already taken</li>
                 </ul>
               ) : null}
 
@@ -87,6 +86,7 @@ export default function LoginRegister() {
                       type="text"
                       placeholder="Your Name"
                       onChange={handleNameChange}
+                      value={userName}
                     />
                   </fieldset>
                 ) : null}
@@ -97,6 +97,7 @@ export default function LoginRegister() {
                     type="text"
                     placeholder="Email"
                     onChange={handleEmailChange}
+                    value={email}
                   />
                 </fieldset>
                 <fieldset className="form-group">
@@ -105,6 +106,7 @@ export default function LoginRegister() {
                     type="password"
                     placeholder="Password"
                     onChange={handlePasswordChange}
+                    value={password}
                   />
                 </fieldset>
                 <button className="btn btn-lg btn-primary pull-xs-right">

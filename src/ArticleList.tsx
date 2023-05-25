@@ -2,15 +2,15 @@ import { AxiosResponse } from "axios";
 import { useAuth } from "contexts/AuthContext";
 import { axiosInstance } from "utils/axiosInstance";
 import React from "react";
-import { ArticleGet } from "interface/article";
+import { ArticleType } from "interface/article";
 import ArticleReview from "ArticleReview";
-import { mapAndSetFavoriteInArticle } from "utils/followFavorite"
+import { mapAndChangeFavoriteInArticle } from "utils/followFavorite"
 
 const ArticleList: React.FunctionComponent = () => {
-  const [globalArticleList, setGlobalArticleList] = React.useState<ArticleGet[]>([]);
-  const [userArticleList, setUserArticleList] = React.useState<ArticleGet[]>([]);
+  const [globalArticleList, setGlobalArticleList] = React.useState<ArticleType[]>([]);
+  const [userArticleList, setUserArticleList] = React.useState<ArticleType[]>([]);
   const [isGlobalTab, setIsGlobalTab] = React.useState(true);
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, detect401 } = useAuth();
 
   React.useEffect(() => {
     let isMounted = true;
@@ -27,6 +27,7 @@ const ArticleList: React.FunctionComponent = () => {
           setUserArticleList(userArticle ? userArticle.data.articles : []);
         }
       } catch (e: unknown) {
+        detect401(e);
         console.error(e);
       }
     })();
@@ -38,12 +39,9 @@ const ArticleList: React.FunctionComponent = () => {
   }, []);
 
   function setFavoriteState(slug: string): (setTo: boolean) => void {
-    // TODO : implement this
-    // set the favorite and favCount state on the parent (this) component
-    
     return (setTo: boolean) => {
-      setGlobalArticleList((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
-      setUserArticleList((prevArticleList) => mapAndSetFavoriteInArticle(prevArticleList, setTo, slug));
+      setGlobalArticleList((prevArticleList) => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
+      setUserArticleList((prevArticleList) => mapAndChangeFavoriteInArticle(prevArticleList, setTo, slug));
     };
   }
 

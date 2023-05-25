@@ -61,16 +61,19 @@ const Layout: React.FunctionComponent = () => {
       </nav>
 
       <Switch>
-        <Route path="/editor" exact component={Editor} />
-        <Route path="/editor/:slug" exact component={Editor} />
-        <Route path="/login" exact component={LoginRegister} />
-        <Route path="/logout" exact component={Logout} />
-        <Route path="/profile/:username" exact component={Profile} />
-        <Route path="/profile/:username/favorites" exact component={Profile} />
-        <Route path="/register" exact component={LoginRegister} />
-        <Route path="/settings" exact component={Settings} />
-        <Route path="/:slug" exact component={Article} />
-        <Route path="/" exact component={ArticleList} />
+        {/* protected */}
+          <Route path="/editor" exact component={Editor} /> 
+          <Route path="/editor/:slug" exact component={Editor} />
+          <Route path="/settings" exact component={Settings} />
+        {/* nonprotected */}
+          <Route path="/login" exact component={LoginRegister} />
+          <Route path="/logout" exact component={Logout} />
+          <Route path="/register" exact component={LoginRegister} />
+        {/* normal */}
+          <Route path="/:slug" exact component={Article} />
+          <Route path="/" exact component={ArticleList} />
+          <Route path="/profile/:username" exact component={Profile} />
+          <Route path="/profile/:username/favorites" exact component={Profile} />
       </Switch>
 
       <footer>

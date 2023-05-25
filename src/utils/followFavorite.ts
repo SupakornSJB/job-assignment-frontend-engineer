@@ -1,6 +1,6 @@
 import { axiosInstance } from "./axiosInstance";
 import { AxiosError } from "axios";
-import { ArticleGet } from "interface/article";
+import { ArticleType } from "interface/article";
 
 export async function fetchFavoriteToggleApi(favorite: boolean, slug: string): Promise<boolean> {
   // fetch the api based on "current" favorite state
@@ -8,20 +8,12 @@ export async function fetchFavoriteToggleApi(favorite: boolean, slug: string): P
     return false;
   }
 
-  try {
-    if (favorite) {
-      console.log(`fav: ${favorite}, api: POST`)
-      await axiosInstance.post(`/articles/${slug}/favorite`);
-    } else {
-      console.log(`fav: ${favorite}, api: DELETE`)
-      await axiosInstance.delete(`/articles/${slug}/favorite`);
-    }
-  } catch (e: unknown) {
-    console.error(e);
-    if (e instanceof AxiosError && e.response?.status === 401) {
-      console.error("error 401");
-    }
-    return false;
+  if (favorite) {
+    // console.log(`fav: ${favorite}, api: POST`);
+    await axiosInstance.post(`/articles/${slug}/favorite`);
+  } else {
+    // console.log(`fav: ${favorite}, api: DELETE`);
+    await axiosInstance.delete(`/articles/${slug}/favorite`);
   }
 
   return true;
@@ -32,10 +24,10 @@ export async function fetchFollowAuthorApi(follow: boolean, username: string): P
 
   try {
     if (follow) {
-      console.log(`follow: ${follow}, api: DELETE`)
+      // console.log(`follow: ${follow}, api: POST`);
       await axiosInstance.post(`profiles/${username}/follow`);
     } else {
-      console.log(`follow: ${follow}, api: DELETE`)
+      // console.log(`follow: ${follow}, api: DELETE`);
       await axiosInstance.delete(`profiles/${username}/follow`);
     }
   } catch (e: unknown) {
@@ -43,25 +35,33 @@ export async function fetchFollowAuthorApi(follow: boolean, username: string): P
     return false;
   }
 
+  // console.log("fetch follow success");
   return true;
 }
 
-export function mapAndSetFavoriteInArticle(prevArticleList: ArticleGet[], setTo: boolean, slug: string): ArticleGet[] {
+export function mapAndChangeFavoriteInArticle(
+  prevArticleList: ArticleType[],
+  setTo: boolean,
+  slug: string
+): ArticleType[] {
   const newArticleList = prevArticleList.map(prevArticle => {
     if (prevArticle.slug === slug) {
-      const newArticle = { ...prevArticle };
-      if (setTo && !prevArticle.favorited) {
-        newArticle.favorited = true;
-        newArticle.favoritesCount += 1;
-      } else if (!setTo && prevArticle.favorited) {
-        newArticle.favorited = false;
-        newArticle.favoritesCount -= 1;
-      }
-      return newArticle;
-    } else {
-      return prevArticle;
+      return changeFavoriteInArticleState(prevArticle, setTo);
     }
+    return prevArticle;
   });
 
   return newArticleList;
+}
+
+export function changeFavoriteInArticleState(prevArticle: ArticleType, setTo: boolean): ArticleType {
+  const article: ArticleType = { ...prevArticle };
+  if (setTo && !prevArticle.favorited) {
+    article.favorited = true;
+    article.favoritesCount += 1;
+  } else if (!setTo && prevArticle.favorited) {
+    article.favorited = false;
+    article.favoritesCount -= 1;
+  }
+  return article;
 }

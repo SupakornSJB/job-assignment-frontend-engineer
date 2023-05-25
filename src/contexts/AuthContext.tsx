@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { ILoginData, IRegisterData, IUserData, IAuthResponse } from "interface/userProfile";
 import { axiosInstance } from "utils/axiosInstance";
+import { AxiosError } from "axios";
 
 interface AuthContextInterface {
   user: IUserData | null;
@@ -10,6 +11,7 @@ interface AuthContextInterface {
   login: (loginData: ILoginData) => Promise<IAuthResponse>;
   logout: () => Promise<IAuthResponse>;
   register: (registerData: IRegisterData) => Promise<IAuthResponse>;
+  detect401: (e:unknown) => Promise<void>;
 }
 
 export const AuthContext = React.createContext<AuthContextInterface>({} as AuthContextInterface);
@@ -58,6 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
     };
   }
 
+  async function detect401(e: unknown): Promise<void> {
+    if (e instanceof AxiosError && e.response?.status === 401) {
+      console.log("401 detected, logging out...")
+      logout();
+    }
+  }
+
   const providerValue: AuthContextInterface = {
     user,
     setUser,
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }): JSX.E
     login,
     logout,
     register,
+    detect401
   };
 
   return <AuthContext.Provider value={providerValue}>{children}</AuthContext.Provider>;

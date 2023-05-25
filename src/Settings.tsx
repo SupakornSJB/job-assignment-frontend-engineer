@@ -1,8 +1,8 @@
-import { AxiosError } from "axios";
 import { useAuth } from "contexts/AuthContext";
 import { axiosInstance } from "utils/axiosInstance";
 import React from "react";
 import { useState } from "react";
+import { validateImage } from "utils/settingValidation";
 
 export default function Settings() {
   const [image, setImage] = useState("");
@@ -10,7 +10,9 @@ export default function Settings() {
   const [bio, setBio] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState<string | undefined>();
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser, logout, detect401 } = useAuth();
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [updateFail, setUpdateFail] = useState(false);
 
   React.useEffect(() => {
     if (user) {
@@ -45,6 +47,14 @@ export default function Settings() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
+    setUpdateSuccess(false);
+    setUpdateFail(false);
+    
+    if (image !== "" && !validateImage(image)) {
+      setUpdateFail(true);
+      return;
+    }
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("token null");
@@ -64,13 +74,13 @@ export default function Settings() {
         bio,
         image,
       });
+
+      setUpdateSuccess(true);
     } catch (e: unknown) {
+      detect401(e);
       console.error(e);
-      if (e instanceof AxiosError && e.response) {
-        if (e.code === "401") {
-          logout();
-        }
-      } else if (e instanceof Error && e.message === "token null") {
+      setUpdateFail(true);
+      if (e instanceof Error && e.message === "token null") {
         logout();
       }
     }
@@ -83,6 +93,12 @@ export default function Settings() {
           <div className="row">
             <div className="col-md-6 offset-md-3 col-xs-12">
               <h1 className="text-xs-center">Your Settings</h1>
+
+              {updateSuccess && <p className="alert alert-success"><strong>Successfully</strong> Update setting</p>}
+              {updateFail && 
+              <p className="alert alert-danger">
+                Setting update <strong>Fail</strong>. Please check the validity of email, username, and image
+              </p>}
 
               <form onSubmit={handleSubmit}>
                 <fieldset>
