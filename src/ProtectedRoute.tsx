@@ -1,29 +1,15 @@
-import { useAuth } from "contexts/AuthContext";
-import React from "react";
-import { Route, Redirect } from "react-router-dom";
+import { Route, Redirect, RouteProps } from "react-router-dom";
 
-const ProtectedRoute: React.FunctionComponent<{ children: React.ReactNode; protectOnAuth: boolean, rest: any[] }> = ({
-  children,
-  protectOnAuth,
-  ...rest
-}) => {
-  const { isLoggedIn } = useAuth();
-  return (
-    <Route
-      {...rest}
-      render={() =>
-        isLoggedIn && protectOnAuth ? (
-          children
-        ) : (
-          <Redirect
-            to={{
-              pathname: "/",
-            }}
-          />
-        )
-      }
-    />
-  );
-};
+export type ProtectedRouteProps = {
+  isAuthenticated: boolean;
+  authenticationPath: string;
+  protectOnAuth: boolean
+} & RouteProps;
 
-export default ProtectedRoute;
+export default function ProtectedRoute({ isAuthenticated, authenticationPath, protectOnAuth, ...routeProps }: ProtectedRouteProps) {
+  if (isAuthenticated === protectOnAuth) {
+    return <Route {...routeProps} />;
+  } else {
+    return <Redirect to={{ pathname: authenticationPath }} />;
+  }
+}

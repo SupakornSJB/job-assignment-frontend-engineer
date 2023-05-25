@@ -9,6 +9,7 @@ import Logout from "./Logout";
 import Profile from "./Profile";
 import Settings from "./Settings";
 import { useAuth } from "contexts/AuthContext";
+import ProtectedRoute from "ProtectedRoute";
 
 const Layout: React.FunctionComponent = () => {
   const { isLoggedIn } = useAuth();
@@ -62,18 +63,72 @@ const Layout: React.FunctionComponent = () => {
 
       <Switch>
         {/* protected */}
-          <Route path="/editor" exact component={Editor} /> 
+        <ProtectedRoute
+          protectOnAuth={true}
+          isAuthenticated={isLoggedIn}
+          authenticationPath="/login"
+          path="/editor"
+          exact
+        >
+          <Editor />
+        </ProtectedRoute>
+        <ProtectedRoute
+          protectOnAuth={true}
+          isAuthenticated={isLoggedIn}
+          authenticationPath="/login"
+          path="/editor/:slug"
+          exact
+        >
+          <Editor />
+        </ProtectedRoute>
+        <ProtectedRoute
+          protectOnAuth={true}
+          isAuthenticated={isLoggedIn}
+          authenticationPath="/login"
+          path="/settings"
+          exact
+        >
+          <Settings />
+        </ProtectedRoute>
+        {/* <Route path="/editor" exact component={Editor} /> 
           <Route path="/editor/:slug" exact component={Editor} />
-          <Route path="/settings" exact component={Settings} />
+          <Route path="/settings" exact component={Settings} /> */}
         {/* nonprotected */}
-          <Route path="/login" exact component={LoginRegister} />
-          <Route path="/logout" exact component={Logout} />
-          <Route path="/register" exact component={LoginRegister} />
+        <ProtectedRoute
+          protectOnAuth={false}
+          isAuthenticated={isLoggedIn}
+          authenticationPath=""
+          path="/login"
+          exact
+        >
+          <LoginRegister/>
+        </ProtectedRoute>
+        <ProtectedRoute
+          protectOnAuth={false}
+          isAuthenticated={isLoggedIn}
+          authenticationPath=""
+          path="/logout"
+          exact
+        >
+          <Logout/>
+        </ProtectedRoute>
+        <ProtectedRoute
+          protectOnAuth={false}
+          isAuthenticated={isLoggedIn}
+          authenticationPath=""
+          path="/register"
+          exact
+        >
+          <LoginRegister/>
+        </ProtectedRoute>
+        {/* <Route path="/login" exact component={LoginRegister} />
+        <Route path="/logout" exact component={Logout} />
+        <Route path="/register" exact component={LoginRegister} /> */}
         {/* normal */}
-          <Route path="/:slug" exact component={Article} />
-          <Route path="/" exact component={ArticleList} />
-          <Route path="/profile/:username" exact component={Profile} />
-          <Route path="/profile/:username/favorites" exact component={Profile} />
+        <Route path="/:slug" exact component={Article} />
+        <Route path="/" exact component={ArticleList} />
+        <Route path="/profile/:username" exact component={Profile} />
+        <Route path="/profile/:username/favorites" exact component={Profile} />
       </Switch>
 
       <footer>
